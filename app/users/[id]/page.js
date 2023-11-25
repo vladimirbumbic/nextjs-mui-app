@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UsersForm from '@/app/components/UsersForm';
+import {
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+  submitUser,
+} from '@/app/utils/userUtils';
 
 const UpdateUser = ({ params }) => {
   const [user, setUser] = useState({
@@ -44,24 +50,16 @@ const UpdateUser = ({ params }) => {
     fetchRoles();
   }, [params.id]);
 
+  useEffect(() => {
+    // Check if both user and roles have data before setting loading to false
+    if (user.roleName && roles.length > 0) {
+      setLoading(false);
+    }
+  }, [user, roles]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUser({ ...user, [name]: value });
-  };
-
-  const validateFirstName = (firstName) => {
-    const regex = /^[a-zA-Z\s]{2,20}$/;
-    return regex.test(firstName);
-  };
-
-  const validateLastName = (lastName) => {
-    const regex = /^[a-zA-Z\s]{2,20}$/;
-    return regex.test(lastName);
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
   };
 
   const handleSubmit = async (e) => {
@@ -93,21 +91,17 @@ const UpdateUser = ({ params }) => {
     setEmailError('');
 
     try {
-      setTimeout(async () => {
-        const res = await fetch(`http://localhost:8000/users/${params.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(user),
-        });
+      const success = await submitUser(
+        'PATCH',
+        `http://localhost:8000/users/${params.id}`,
+        user
+      );
 
-        if (res.ok) {
-          router.push('/users');
-        } else {
-          console.error('Failed to update user');
-        }
-      }, 2000);
+      if (success) {
+        router.push('/users');
+      } else {
+        console.error('Failed to update user');
+      }
     } catch (error) {
       console.error('Error updating user:', error);
     } finally {

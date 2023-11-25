@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import RoleForm from '@/app/components/RoleForm';
+import {
+  validateRoleName,
+  validateShortDescription,
+  checkDuplicateRole,
+  submitRole,
+} from '@/app/utils/roleUtils';
 
 const RoleUpdate = ({ params }) => {
   const [role, setRole] = useState({ roleName: '', shortDescription: '' });
@@ -9,7 +15,6 @@ const RoleUpdate = ({ params }) => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [roleNameError, setRoleNameError] = useState('');
   const [shortDescriptionError, setShortDescriptionError] = useState('');
-  const [isDuplicate, setIsDuplicate] = useState(false);
 
   const router = useRouter();
 
@@ -36,37 +41,20 @@ const RoleUpdate = ({ params }) => {
     //Check for duplicate role name
     if (name === 'roleName') {
       try {
-        const checkDuplicateRes = await fetch(`http://localhost:8000/roles`);
-        const existingRoles = await checkDuplicateRes.json();
-
-        setIsDuplicate(existingRoles.some((item) => item.roleName === value));
+        const isDuplicate = await checkDuplicateRole(value); // Use the updated value
+        if (isDuplicate) {
+          setRoleNameError('Role with the same name already exists.');
+        } else {
+          setRoleNameError('');
+        }
       } catch (error) {
         console.error('Error checking duplicate role:', error);
       }
+    } else {
+      setRoleNameError('');
     }
-    setRoleNameError('');
+
     setShortDescriptionError('');
-  };
-
-  const validateRoleName = (name) => {
-    const regex = /^[a-zA-Z0-9_]{2,16}$/;
-    return regex.test(name);
-  };
-
-  const validateShortDescription = (description) => {
-    if (description === '') {
-      return true;
-    }
-
-    const regex = /^[a-zA-Z\s]+$/;
-    const minLength = 2;
-    const maxLength = 50;
-
-    return (
-      regex.test(description) &&
-      description.length >= minLength &&
-      description.length <= maxLength
-    );
   };
 
   const handleUpdate = async (e) => {
@@ -86,9 +74,7 @@ const RoleUpdate = ({ params }) => {
       return;
     }
 
-    if (isDuplicate) {
-      setRoleNameError('Role with the same name already exists.');
-
+    if (roleNameError) {
       return;
     }
 
@@ -98,36 +84,26 @@ const RoleUpdate = ({ params }) => {
     setShortDescriptionError('');
     setShowSuccessMessage(true);
 
-    try {
-      // Simulate a delay of 2 seconds
+    const success = await submitRole(
+      'PATCH',
+      `http://localhost:8000/roles/${params.id}`,
+      role
+    );
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (success) {
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 1000);
 
-      const res = await fetch(`http://localhost:8000/roles/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(role),
-      });
-
-      if (res.ok) {
-        // Hide success message after one second
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 1000);
-
-        router.push('/roles');
-        router.refresh();
-      } else {
-        console.error('Failed to update role');
-      }
-    } catch (error) {
-      console.error('Error updating role:', error);
-    } finally {
-      setIsLoading(false);
+      router.push('/roles');
+      router.refresh();
+    } else {
+      console.error('Failed to update role');
     }
+
+    setIsLoading(false);
   };
+
   return (
     <RoleForm
       title='Update Role'

@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UsersForm from '@/app/components/UsersForm';
+import {
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+  submitUser,
+} from '@/app/utils/userUtils';
 
 const CreateUser = () => {
   const [user, setUser] = useState({
@@ -15,7 +21,7 @@ const CreateUser = () => {
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -36,21 +42,6 @@ const CreateUser = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUser({ ...user, [name]: value });
-  };
-
-  const validateFirstName = (firstName) => {
-    const regex = /^[a-zA-Z\s]{2,20}$/;
-    return regex.test(firstName);
-  };
-
-  const validateLastName = (lastName) => {
-    const regex = /^[a-zA-Z\s]{2,20}$/;
-    return regex.test(lastName);
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
   };
 
   const handleSubmit = async (e) => {
@@ -82,21 +73,17 @@ const CreateUser = () => {
     setEmailError('');
 
     try {
-      setTimeout(async () => {
-        const res = await fetch('http://localhost:8000/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(user),
-        });
+      const success = await submitUser(
+        'POST',
+        'http://localhost:8000/users',
+        user
+      );
 
-        if (res.ok) {
-          router.push('/users');
-        } else {
-          console.error('Failed to create user');
-        }
-      }, 2000);
+      if (success) {
+        router.push('/users');
+      } else {
+        console.error('Failed to create user');
+      }
     } catch (error) {
       console.error('Error creating user:', error);
     } finally {

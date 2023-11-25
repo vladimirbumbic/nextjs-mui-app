@@ -44,7 +44,7 @@ const UsersForm = ({
         justifyContent: 'center',
       }}
     >
-      {!loading ? (
+      {loading ? (
         <CircularIndeterminate />
       ) : (
         <form
@@ -101,11 +101,13 @@ const UsersForm = ({
               value={user.roleName}
               onChange={handleInputChange}
             >
-              {roles.map((role) => (
-                <MenuItem key={role.id} value={role.roleName}>
-                  {role.roleName}
-                </MenuItem>
-              ))}
+              {roles
+                .sort((a, b) => a.roleName.localeCompare(b.roleName))
+                .map((role) => (
+                  <MenuItem key={role.id} value={role.roleName}>
+                    {role.roleName}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
 
