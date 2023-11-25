@@ -114,6 +114,7 @@ const CreateUser = () => {
       firstNameError={firstNameError}
       lastNameError={lastNameError}
       emailError={emailError}
+      mode='create'
     />
   );
 };

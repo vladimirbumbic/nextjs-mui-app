@@ -125,6 +125,7 @@ const UpdateUser = ({ params }) => {
       firstNameError={firstNameError}
       lastNameError={lastNameError}
       emailError={emailError}
+      mode='update'
     />
   );
 };

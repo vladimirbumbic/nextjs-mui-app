@@ -33,6 +33,7 @@ const UsersForm = ({
   firstNameError,
   lastNameError,
   emailError,
+  mode,
 }) => {
   return (
     <Container
@@ -114,7 +115,7 @@ const UsersForm = ({
             color='primary'
             style={{ marginTop: '20px' }}
           >
-            Create User
+            {mode === 'create' ? 'Create User' : 'Update User'}
           </Button>
         </form>
       )}
